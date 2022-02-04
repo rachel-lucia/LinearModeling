@@ -10,20 +10,20 @@
 
 # todo: add support for optional cols argument
 
-# todo: think of how to preallocate arrays, avoid rbind
 crossTab = function(df,cols,rows,parametric = TRUE){
   levels = unique(df[,cols])
-  summstats = as.data.frame(matrix(nrow = 0,ncol = length(levels)))
-  colnames(summstats) = paste0(cols,levels)
+  summstats = vector(mode = "list",length = length(rows))
   pvals = as.data.frame(matrix(nrow = length(rows),ncol = 2))
   colnames(pvals) = c("p","test")
   
   for (i in 1:length(rows)){
     out = crossTabSingle(df = df,cols = cols,row = rows[i],parametric = parametric)
-    summstats = rbind(summstats,out$summstats)
+    summstats[[i]] = out$summstats
     pvals[i,] = out$pvals
   }
   rownames(pvals) = rows
+  
+  summstats = do.call("rbind",summstats)
   
   toReturn = list(summstats = summstats, pvals = pvals)
   
@@ -38,7 +38,7 @@ crossTabSingle = function(df,cols,row,parametric = TRUE){
   
   colClass = class(df[,cols])
   if (!(colClass %in% c("character","logical","factor"))){
-    stop("Can only cross-tabulate by a categorical variable. Try again with a different value for cols")
+    stop("Can only cross-tabulate by a single categorical variable. Try again with a different value for cols")
   }
   
   class = class(df[,row])
